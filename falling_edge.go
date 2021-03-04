@@ -3,14 +3,8 @@
 package flipflop
 
 import (
-	"io"
 	"time"
 )
-
-type BufferedInput interface {
-	Trigger()
-	io.Closer
-}
 
 type detector struct {
 	t         time.Duration
@@ -21,6 +15,7 @@ type detector struct {
 	quit chan struct{}
 }
 
+// NewFallingEdge returns a new falling edge detector.
 // bufferTime is the time to buffer, worstCase is buffertime*worstcase time to wait before writing
 // to the output anyway.
 func NewFallingEdge(bufferTime, worstCase time.Duration) (in chan<- struct{}, out <-chan struct{}, clean func()) {
@@ -59,19 +54,5 @@ func (d *detector) work() {
 			worstCase = nil
 			waitWrite = nil
 		}
-
 	}
-}
-
-// Triggers the input. Does not guarantee an item is put to the buffer.
-func (d *detector) Trigger() {
-	select {
-	case d.buf <- struct{}{}:
-	default:
-	}
-}
-
-func (d *detector) Close() error {
-	close(d.quit)
-	return nil
 }
